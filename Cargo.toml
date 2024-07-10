@@ -9,4 +9,4 @@ keywords = ["LD_PRELOAD", "interposition"]
 license = "BSD-2-Clause"
 
 [dependencies]
-libc = "0.2"
+libc = "0.2.155"
