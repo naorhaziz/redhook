@@ -40,16 +40,17 @@ macro_rules! hook {
 
             #[no_mangle]
             pub unsafe extern fn $real_fn ( $($v : $t),* ) -> $r {
-                $crate::reentrancy_guard::ReentrancyGuard::new()
-                    .map(|_guard| {
-                        ::std::panic::catch_unwind(|| $hook_fn ( $($v),* ))
+                match $crate::reentrancy_guard::ReentrancyGuard::new() {
+                    Some(_guard) => {
+                        ::std::panic::catch_unwind(|| $hook_fn ( $($v),* ).unwrap_or_else(|_| $real_fn.get() ( $($v),* )))
                             .unwrap_or_else(|_| $real_fn.get() ( $($v),* ))
-                    })
-                    .unwrap_or_else(|| $real_fn.get() ( $($v),* ))
+                    },
+                    None => $real_fn.get() ( $($v),* )
+                }
             }
         }
 
-        pub unsafe fn $hook_fn ( $($v : $t),* ) -> $r {
+        pub unsafe fn $hook_fn ( $($v : $t),* ) -> ::anyhow::Result<$r> {
             $body
         }
     };

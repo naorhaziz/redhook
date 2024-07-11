@@ -10,3 +10,4 @@ license = "BSD-2-Clause"
 
 [dependencies]
 libc = "0.2.155"
+anyhow = "1.0.86"
