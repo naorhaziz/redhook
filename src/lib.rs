@@ -1,9 +1,9 @@
 extern crate libc;
 
-#[cfg(target_env = "gnu")]
+#[cfg(any(target_env = "gnu", target_env = "musl"))]
 pub mod ld_preload;
 
-#[cfg(target_env = "gnu")]
+#[cfg(any(target_env = "gnu", target_env = "musl"))]
 pub mod reentrancy_guard;
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
