@@ -17,7 +17,7 @@ pub unsafe fn dlsym_next(symbol: &'static str) -> *const u8 {
 
 #[macro_export]
 macro_rules! hook {
-    (unsafe fn $real_fn:ident ( real_ret_val: $r:ty, $($v:ident : $t:ty),* ) => $hook_fn:ident $body:block) => {
+    (unsafe fn $real_fn:ident ( $($v:ident : $t:ty),* ) -> $r:ty => $hook_fn:ident $body:block) => {
         #[allow(non_camel_case_types)]
         pub struct $real_fn {__private_field: ()}
         #[allow(non_upper_case_globals)]
@@ -40,22 +40,22 @@ macro_rules! hook {
 
             #[no_mangle]
             pub unsafe extern fn $real_fn ( $($v : $t),* ) -> $r {
-                let real_ret_val = $real_fn.get() ( $($v),* );
+                let rv: $r = $real_fn.get() ( $($v),* );
                 let _ = ::std::panic::catch_unwind(|| {
-                    $hook_fn(&real_ret_val, $($v),*);
+                    let _ = $hook_fn ( rv, $($v),* );
                 });
-                real_ret_val
+                rv
             }
         }
 
-
-        pub unsafe fn $hook_fn ( real_ret_val: &$r, $($v : $t),* ) -> $r {
+        pub unsafe fn $hook_fn ( real_ret_val: $r, $($v : $t),* ) -> ::anyhow::Result<()> {
             $body
+            Ok(())
         }
     };
 
     (unsafe fn $real_fn:ident ( $($v:ident : $t:ty),* ) => $hook_fn:ident $body:block) => {
-        $crate::transparent_hook! { unsafe fn $real_fn ( real_ret_val: (), $($v : $t),* ) => $hook_fn $body }
+        $crate::hook! { unsafe fn $real_fn ( real_ret_val: (), $($v : $t),* ) => $hook_fn $body }
     };
 }
 
